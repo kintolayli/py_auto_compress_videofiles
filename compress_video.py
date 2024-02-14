@@ -6,6 +6,8 @@ from configparser import ConfigParser
 
 # Получаем путь к текущей директории
 script_dir = os.path.dirname(os.path.realpath(__file__))
+input_dir_name = "to_compress_video"
+input_dir_path = os.path.join(script_dir, input_dir_name)
 config_filepath = os.path.join(script_dir, "config.ini")
 
 # Создаем объект конфигурации
@@ -16,14 +18,16 @@ if os.path.exists(config_filepath):
     config.read(config_filepath)
 else:
     # Иначе создаем новый файл конфигурации с базовыми значениями
-    new_folder_path = os.path.join(script_dir, "to_compress_video")
-    if not os.path.exists(new_folder_path):
-        os.makedirs(new_folder_path)
 
-    config["Settings"] = {"folder_to_watch": new_folder_path}
+    if not os.path.exists(input_dir_path):
+        os.makedirs(input_dir_path)
+
+    config["Settings"] = {"folder_to_watch": input_dir_path}
     with open(config_filepath, "w") as config_file:
         config.write(config_file)
 
+# Открываем папку куда будем закидывать видео
+os.startfile(input_dir_path)
 # Папка, которую мы будем отслеживать
 folder_to_watch = config.get("Settings", "folder_to_watch")
 # folder_to_watch2 = r'D:\dev\py_auto_compress_video\to_compress_video'
