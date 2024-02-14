@@ -17,7 +17,9 @@ if os.path.exists(config_filepath):
 else:
     # Иначе создаем новый файл конфигурации с базовыми значениями
     new_folder_path = os.path.join(script_dir, "to_compress_video")
-    os.makedirs(new_folder_path)
+    if not os.path.exists(new_folder_path):
+        os.makedirs(new_folder_path)
+
     config["Settings"] = {"folder_to_watch": new_folder_path}
     with open(config_filepath, "w") as config_file:
         config.write(config_file)
@@ -43,7 +45,7 @@ class MyHandler(FileSystemEventHandler):
         self.last_size = 0
         self.last_change_time = time.time()
         print(
-            f"Скрипт запущен. Для обработки видео поместите файлы формата .webm или .mp4. в директорию:\n\n{folder_to_watch}\n\nДождитесь завершения обработки, это может занять около 15 минут.")
+            f"Скрипт запущен и находиться в ожидании.\nДля обработки видео поместите файлы формата .webm или .mp4. в директорию:\n\n{folder_to_watch}\n\nДождитесь завершения обработки, это может занять около 15 минут.")
 
     def on_created(self, event):
         if event.is_directory:
@@ -52,7 +54,12 @@ class MyHandler(FileSystemEventHandler):
             input_filename = event.src_path.split("\\")[-1].split(".")[0]
             current_date = time.strftime("%Y-%m-%d-%H%M%S")
             new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
-            new_filepath = os.path.join(folder_to_watch, new_filename)
+
+            new_filepath_folder = os.path.join(folder_to_watch, "video_output")
+            if not os.path.exists(new_filepath_folder):
+                os.makedirs(new_filepath_folder)
+
+            new_filepath = os.path.join(new_filepath_folder, new_filename)
 
             while True:
                 try:
