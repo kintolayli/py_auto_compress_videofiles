@@ -66,7 +66,8 @@ class MyHandler(FileSystemEventHandler):
                     current_size = os.path.getsize(event.src_path)
                     if current_size == self.last_size:
                         convert_video(event.src_path, new_filepath)
-                        print(f"Обработка завершена. Итоговый файл можно найти по пути {new_filepath}")
+                        print(f"\n\nОбработка завершена. Итоговый файл можно найти по пути {new_filepath}")
+                        os.unlink(event.src_path)
                         break
                     else:
                         self.last_size = current_size
