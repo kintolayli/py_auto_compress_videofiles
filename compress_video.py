@@ -18,7 +18,6 @@ if os.path.exists(config_filepath):
     config.read(config_filepath)
 else:
     # Иначе создаем новый файл конфигурации с базовыми значениями
-
     if not os.path.exists(input_dir_path):
         os.makedirs(input_dir_path)
 
@@ -30,8 +29,8 @@ else:
 os.startfile(input_dir_path)
 # Папка, которую мы будем отслеживать
 folder_to_watch = config.get("Settings", "folder_to_watch")
-# folder_to_watch2 = r'D:\dev\py_auto_compress_video\to_compress_video'
-allowed_video_formats_array = ("webm", "mp4")
+allowed_video_formats_array = ("webm",)
+# allowed_video_formats_array = ("webm", "mp4")
 
 
 def allowed_video_formats(path):
@@ -49,7 +48,10 @@ class MyHandler(FileSystemEventHandler):
         self.last_size = 0
         self.last_change_time = time.time()
         print(
-            f"Скрипт запущен и находиться в ожидании.\nДля обработки видео поместите файлы формата .webm или .mp4. в директорию:\n\n{folder_to_watch}\n\nДождитесь завершения обработки, это может занять около 15 минут.")
+            f"Скрипт запущен и находиться в ожидании.\nДля обработки видео "
+            f"поместите файлы формата .webm или .mp4. в директорию:\n\n"
+            f"{folder_to_watch}\n\nДождитесь завершения обработки, это может "
+            f"занять около 15 минут.")
 
     def on_created(self, event):
         if event.is_directory:
@@ -70,13 +72,17 @@ class MyHandler(FileSystemEventHandler):
                     current_size = os.path.getsize(event.src_path)
                     if current_size == self.last_size:
                         convert_video(event.src_path, new_filepath)
-                        print(f"\n\nОбработка завершена. Итоговый файл можно найти по пути {new_filepath}")
+                        original_file_size = round(current_size / 1024, 2)
+                        compressed_file_size = round(os.path.getsize(new_filepath) / 1024, 2)
+                        compression_value = round(original_file_size / compressed_file_size, 2)
+                        print(f"\n\nОбработка завершена. Итоговый файл можно "
+                              f"найти по пути {new_filepath}\n\nНазвание оригинального файла: {input_filename}\nРазмер оригинального файла: {original_file_size} МБ\n\nНазвание нового файла: {new_filename}\nРазмер нового файла: {compressed_file_size} МБ\nВеличина сжатия (в ед.): {compression_value}")
                         os.unlink(event.src_path)
                         break
                     else:
                         self.last_size = current_size
                         self.last_change_time = time.time()
-                        time.sleep(1)
+                        time.sleep(2)
                 except Exception as e:
                     print(f"Ошибка при проверке размера файла: {e}")
 
