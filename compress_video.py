@@ -4,20 +4,16 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from configparser import ConfigParser
 
-# Получаем путь к текущей директории
 script_dir = os.path.dirname(os.path.realpath(__file__))
 input_dir_name = "to_compress_video"
 input_dir_path = os.path.join(script_dir, input_dir_name)
 config_filepath = os.path.join(script_dir, "config.ini")
 
-# Создаем объект конфигурации
 config = ConfigParser()
 
-# Если файл конфигурации существует, читаем его
 if os.path.exists(config_filepath):
     config.read(config_filepath)
 else:
-    # Иначе создаем новый файл конфигурации с базовыми значениями
     if not os.path.exists(input_dir_path):
         os.makedirs(input_dir_path)
 
@@ -25,12 +21,9 @@ else:
     with open(config_filepath, "w") as config_file:
         config.write(config_file)
 
-# Открываем папку куда будем закидывать видео
 os.startfile(input_dir_path)
-# Папка, которую мы будем отслеживать
 folder_to_watch = config.get("Settings", "folder_to_watch")
 allowed_video_formats_array = ("webm",)
-# allowed_video_formats_array = ("webm", "mp4")
 
 
 def allowed_video_formats(path):
@@ -57,7 +50,8 @@ class MyHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         if allowed_video_formats(event.src_path):
-            input_filename = event.src_path.split("\\")[-1].split(".")[0]
+            input_filename = event.src_path.split("\\")[-1]
+            input_filename, _ = os.path.splitext(input_filename)
             current_date = time.strftime("%Y-%m-%d-%H%M%S")
             new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
 
