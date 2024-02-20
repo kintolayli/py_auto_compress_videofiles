@@ -32,7 +32,7 @@ def allowed_video_formats(path):
 
 
 def convert_video(input_files_path, output_files_path):
-    command = f'ffmpeg -i "{input_files_path}" -c:v libx264 -crf 24 -c:a libmp3lame -q:a 2 "{output_files_path}"'
+    command = f'ffmpeg -i "{input_files_path}" -c:v libx264 -crf 24 -c:a libmp3lame -q:a 2 -vsync 2 "{output_files_path}"'
     os.system(command)
 
 
