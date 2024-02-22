@@ -81,9 +81,7 @@ class MyHandler(FileSystemEventHandler):
             input_filename_full = event.src_path.split("\\")[-1]
             input_filename, _ = os.path.splitext(input_filename_full)
             current_date = time.strftime("%Y-%m-%d-%H%M%S")
-            new_filename = (
-                f"{input_filename}_compressed_from_{current_date}.mp4"
-            )
+            new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
 
             new_filepath_folder = os.path.join(folder_to_watch, "video_output")
             if not os.path.exists(new_filepath_folder):
@@ -117,7 +115,8 @@ class MyHandler(FileSystemEventHandler):
                         self.last_change_time = time.time()
                         time.sleep(1)
                 except Exception as e:
-                    print(f"Ошибка при проверке размера файла: {e}")
+                    print(e)
+                    time.sleep(1)
 
             if len(result_string_array) != 0:
                 print(
