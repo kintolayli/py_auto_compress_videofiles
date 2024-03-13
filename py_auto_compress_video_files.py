@@ -110,7 +110,7 @@ class MyHandler(FileSystemEventHandler):
             # new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
             new_filename = f"{input_filename}.mp4"
 
-            new_filepath_folder = os.path.join(folder_to_watch, "video_output")
+            new_filepath_folder = os.path.join(folder_to_watch, "compressed_video_output")
             if not os.path.exists(new_filepath_folder):
                 os.makedirs(new_filepath_folder)
 
