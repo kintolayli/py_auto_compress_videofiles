@@ -29,6 +29,31 @@ folder_to_watch = config.get("Settings", "folder_to_watch")
 result_string_array = []
 
 
+def get_file_size(path: str) -> int:
+    return os.path.getsize(path)
+
+
+def format_file_size(bytes: int) -> str:
+
+    bytes_in_kb = 2 ** 10
+    bytes_in_mb = bytes_in_kb * (2 ** 10)
+    bytes_in_gb = bytes_in_mb * (2 ** 10)
+    bytes_in_tb = bytes_in_gb * (2 ** 10)
+
+    if bytes < bytes_in_kb:
+        file_size, units = bytes, "Б"
+    elif bytes < bytes_in_mb:
+        file_size, units = bytes / bytes_in_kb, "КБ"
+    elif bytes < bytes_in_gb:
+        file_size, units = bytes / bytes_in_mb, "МБ"
+    elif bytes < bytes_in_tb:
+        file_size, units = bytes / bytes_in_gb, "ГБ"
+    else:
+        file_size, units = bytes / bytes_in_tb, "ТБ"
+
+    return f"{round(file_size, 2)} {units}"
+
+
 def allowed_video_formats(path):
     path_endswith = path.split(".")[-1]
     return path_endswith in ("webm",)
@@ -68,11 +93,12 @@ class MyHandler(FileSystemEventHandler):
         self.last_size = 0
         self.last_change_time = time.time()
         print(
-            f"Скрипт запущен и находиться в ожидании.\nДля обработки видео "
+            f"Скрипт запущен и находится в ожидании.\nДля обработки видео "
             f"поместите файлы формата .webm или .mp4. в директорию:\n\n"
             f"{folder_to_watch}\n\nДождитесь завершения обработки, это может "
             f"занять около 15 минут."
         )
+        self.files = []
 
     def on_created(self, event):
         if event.is_directory:
@@ -81,7 +107,8 @@ class MyHandler(FileSystemEventHandler):
             input_filename_full = event.src_path.split("\\")[-1]
             input_filename, _ = os.path.splitext(input_filename_full)
             current_date = time.strftime("%Y-%m-%d-%H%M%S")
-            new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
+            # new_filename = f"{input_filename}_compressed_from_{current_date}.mp4"
+            new_filename = f"{input_filename}.mp4"
 
             new_filepath_folder = os.path.join(folder_to_watch, "video_output")
             if not os.path.exists(new_filepath_folder):
@@ -91,21 +118,23 @@ class MyHandler(FileSystemEventHandler):
 
             while True:
                 try:
-                    current_size = os.path.getsize(event.src_path)
+                    current_size = get_file_size(event.src_path)
                     if current_size == self.last_size:
                         time_start = time.time()
                         convert_video(event.src_path, new_filepath)
 
-                        original_file_size = round(current_size / 1024, 0)
-                        compressed_file_size = round(
-                            os.path.getsize(new_filepath) / 1024, 0
-                        )
-                        compression_value = round(
-                            original_file_size / compressed_file_size, 2
-                        )
+                        original_file_size = current_size
+                        compressed_file_size = get_file_size(new_filepath)
+
+                        compression_value = round(original_file_size / compressed_file_size, 2)
+
                         time_end = time.time()
                         processing_time = time_end - time_start
-                        result = f"Название оригинального файла: {input_filename_full}\nРазмер оригинального файла: {original_file_size} МБ\nНазвание нового файла: {new_filename}\nРазмер нового файла: {compressed_file_size} МБ\nВеличина сжатия (в ед.): {compression_value}\nОбработка начата: {format_time(time_start)}\nОбработка закончена: {format_time(time_end)}\nВремя обработки: {timedelta(seconds=(processing_time)).split('.')[0]}"
+                        processing_time_timedelta = timedelta(
+                            seconds=(processing_time))
+                        processing_time_timedelta_str = \
+                            str(processing_time_timedelta).split('.')[0]
+                        result = f"Название оригинального файла: {input_filename_full}\nРазмер оригинального файла: {format_file_size(original_file_size)}\nНазвание нового файла: {new_filename}\nРазмер нового файла: {format_file_size(compressed_file_size)}\nВеличина сжатия (в ед.): {compression_value}\nОбработка начата: {format_time(time_start)}\nОбработка закончена: {format_time(time_end)}\nВремя обработки: {processing_time_timedelta_str}"
                         result_string_array.append(result)
 
                         os.unlink(event.src_path)
@@ -136,8 +165,12 @@ if __name__ == "__main__":
     observer.start()
 
     try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
+        while observer.is_alive():
+            # Метод `observer.join(timeout=None)` - принимает `timeout` в
+            # секундах, блокирующий операцию на указанное время.
+            # Если `timeout` отсутствует, то операция будет блокироваться
+            # до тех пор, пока поток не завершится.
+            observer.join(1)
+    finally:
         observer.stop()
-    observer.join()
+        observer.join()
